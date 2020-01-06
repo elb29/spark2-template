@@ -122,7 +122,79 @@ print("Job loss in the greatest salary growths : \n")
       .show(20)
   }
 
+
+  def exec4(): Unit = {
+    val spark = SessionBuilder.buildSession ()
+
+    import spark.implicits._
+
+    val toursDF = spark.read
+      .option ("multiline", true)
+      .option ("mode", "PERMISSIVE")
+      .json ("data/input/tours.json")
+
+    //toursDF.show()
+
+    print("\n How many unique levels of difficulties : \n")
+    toursDF
+      .select($"tourDifficulty")
+      .distinct()
+      .select(count($"tourDifficulty").alias("nb difficulties"))
+      .show
+
+    print("\n Tour prices stats : \n")
+    toursDF
+      .select(min($"tourPrice").alias("min"),max($"tourPrice").alias("max"),avg($"tourPrice").alias("avg"))
+      .show
+
+    print("\n Tour prices stats by difficulty : \n")
+    toursDF
+      .select($"tourDifficulty",$"tourPrice")
+      .groupBy($"tourDifficulty")
+      .agg(min($"tourPrice"),max($"tourPrice"),avg($"tourPrice"))
+      .show
+
+    print("\n Tour prices and durations stats by difficulty : \n")
+    toursDF
+      .select($"tourDifficulty",$"tourPrice",$"tourLength")
+      .groupBy($"tourDifficulty")
+      .agg(min($"tourPrice"),max($"tourPrice"),avg($"tourPrice"),
+        min($"tourLength"),max($"tourLength"),avg($"tourLength"))
+      .show
+
+    print("\n Top 10 tour tags : \n")
+    toursDF
+      .select(explode($"tourTags"))
+      .groupBy("col")
+      .count()
+      .orderBy($"count".desc)
+      .show(10)
+
+    print("\n Relationship between top 10 tour tags and tourDifficulty : \n")
+    toursDF
+      .select(explode($"tourTags"), $"tourDifficulty",$"tourPrice")
+      .groupBy($"col", $"tourDifficulty")
+      .count()
+      .orderBy($"count".desc)
+      .show(10)
+
+
+    print("\n Stats in relationship between top 10 tour tags and tourDifficulty : \n")
+   toursDF
+      .select(explode($"tourTags"),$"tourPrice",$"tourDifficulty")
+      .groupBy($"col")
+      .agg(min($"tourPrice"),max($"tourPrice"),avg($"tourPrice"))
+      .orderBy($"avg(tourPrice)".desc)
+      .show(10)
+
+
+
+  }
+
+
+
 }
+
 
 
 
